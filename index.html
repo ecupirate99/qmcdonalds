@@ -83,7 +83,7 @@ async function sendMessage() {
     try {
         // Production URL for the chatbot webhook
         const baseUrl = 'https://ecupirate99-n8n-free.hf.space/webhook/93778624-c756-4133-b169-6768f49dd513';
-        const targetUrl = `${baseUrl}?query=${encodeURIComponent(question)}`;
+        const targetUrl = `${baseUrl}?chatInput=${encodeURIComponent(question)}`;
 
         const response = await fetch(targetUrl, { method: 'GET' });
 
