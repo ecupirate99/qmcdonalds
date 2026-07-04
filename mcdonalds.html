@@ -81,17 +81,12 @@ async function sendMessage() {
     banner.style.display = 'none';
 
     try {
-        // ============================================================
-        // n8n webhook URL — called directly, no proxy.
-        // n8n Webhook node is configured for GET with chatInput as a
-        // query string parameter (confirmed working in test mode).
-        // ============================================================
-        const baseUrl = 'https://ecupirate99-n8n-free.hf.space/webhook/31d9c47d-ab9e-4539-9c82-7dbfb92aa14d';
-        const targetUrl = `${baseUrl}?chatInput=${encodeURIComponent(question)}`;
+        // Production URL for the chatbot webhook
+        const baseUrl = 'https://ecupirate99-n8n-free.hf.space/webhook/93778624-c756-4133-b169-6768f49dd513';
+        const targetUrl = `${baseUrl}?query=${encodeURIComponent(question)}`;
 
         const response = await fetch(targetUrl, { method: 'GET' });
 
-        // Read the body as text first
         const rawText = await response.text();
 
         if (!response.ok) {
@@ -99,7 +94,7 @@ async function sendMessage() {
         }
 
         if (!rawText) {
-            throw new Error('Webhook returned an empty response. Check that your n8n workflow ends in a "Respond to Webhook" node set to return JSON.');
+            throw new Error('Webhook returned an empty response. Check that your n8n workflow ends in a "Respond to Webhook" node.');
         }
 
         // Parse result
