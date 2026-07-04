@@ -1,0 +1,16 @@
+let text = $input.first().json.output;
+
+// 1. Replace **Header** with <br><br><b>Header</b>
+// 2. Replace the bullet point marker (* ) with a line break (<br>• )
+let htmlText = text
+    .replace(/\*\*(.*?)\*\*/g, "<br><br><b>$1</b>") 
+    .replace(/\* /g, "<br>• ");
+
+// Optional: Clean up the very first line if it adds an extra <br><br> at the start
+htmlText = htmlText.replace(/^<br><br>/, "");
+
+return {
+  json: {
+    output: htmlText
+  }
+};
