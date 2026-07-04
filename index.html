@@ -1,16 +1,89 @@
-let text = $input.first().json.output;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chatbot</title>
+    <style>
+        /* Add your existing CSS here */
+        .bubble { padding: 10px; margin: 5px; border-radius: 10px; background: #f0f0f0; }
+        .message.bot { text-align: left; }
+        .input-area { display: flex; padding: 10px; }
+    </style>
+</head>
+<body>
 
-// 1. Replace **Header** with <br><br><b>Header</b>
-// 2. Replace the bullet point marker (* ) with a line break (<br>• )
-let htmlText = text
-    .replace(/\*\*(.*?)\*\*/g, "<br><br><b>$1</b>") 
-    .replace(/\* /g, "<br>• ");
+    <div id="msgsEl"></div>
 
-// Optional: Clean up the very first line if it adds an extra <br><br> at the start
-htmlText = htmlText.replace(/^<br><br>/, "");
+    <div class="input-area">
+        <input type="text" id="msgInput" placeholder="Type or speak a question...">
+        <button id="voiceBtn">🎙️</button>
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
 
-return {
-  json: {
-    output: htmlText
-  }
-};
+<script>
+    const msgInput = document.getElementById('msgInput');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const msgsEl = document.getElementById('msgsEl');
+
+    // 1. Speech Recognition (Transcriber)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        voiceBtn.onclick = () => {
+            recognition.start();
+            voiceBtn.textContent = '🔴';
+        };
+        recognition.onresult = (event) => {
+            msgInput.value = event.results[0][0].transcript;
+            voiceBtn.textContent = '🎙️';
+        };
+    }
+
+    // 2. Speech Synthesis (Reader)
+    function speakBotResponse(text) {
+        const synth = window.speechSynthesis;
+        // Strip HTML tags for the reader
+        const cleanText = text.replace(/<\/?[^>]+(>|$)/g, ""); 
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+
+        // Try to find a female-sounding voice
+        const voices = synth.getVoices();
+        const femaleVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Samantha') || v.name.includes('Aria'));
+        if (femaleVoice) utterance.voice = femaleVoice;
+
+        synth.speak(utterance);
+    }
+
+    async function sendMessage() {
+        const question = msgInput.value.trim();
+        if (!question) return;
+
+        // Display User Msg
+        addMsg(question, 'user');
+        msgInput.value = '';
+
+        try {
+            const url = `https://ecupirate99-n8n-free.hf.space/webhook/93778624-c756-4133-b169-6768f49dd513?query=${encodeURIComponent(question)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            // Assuming your webhook returns { "output": "..." }
+            const reply = data.output;
+            addMsg(reply, 'bot');
+            speakBotResponse(reply);
+        } catch (e) {
+            alert("Error connecting to server.");
+        }
+    }
+
+    function addMsg(text, role) {
+        const wrap = document.createElement('div');
+        wrap.className = 'message ' + role;
+        wrap.innerHTML = `<div class="bubble">${text}</div>`;
+        msgsEl.appendChild(wrap);
+    }
+</script>
+</body>
+</html>
