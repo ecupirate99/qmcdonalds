@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Chatbot</title>
+    <title>Workplace Assistant</title>
     <style>
-        /* Add your existing CSS here */
-        .bubble { padding: 10px; margin: 5px; border-radius: 10px; background: #f0f0f0; }
-        .message.bot { text-align: left; }
-        .input-area { display: flex; padding: 10px; }
+        /* CSS: Keeps your chat looking pretty */
+        body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        #msgsEl { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .message { margin: 10px 0; }
+        .bubble { padding: 10px; border-radius: 10px; display: inline-block; }
+        .user { text-align: right; }
+        .user .bubble { background: #007bff; color: white; }
+        .bot .bubble { background: #e9ecef; }
+        .input-area { display: flex; gap: 5px; }
+        input { flex: 1; padding: 10px; }
     </style>
 </head>
 <body>
@@ -26,7 +32,7 @@
     const voiceBtn = document.getElementById('voiceBtn');
     const msgsEl = document.getElementById('msgsEl');
 
-    // 1. Speech Recognition (Transcriber)
+    // 1. Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -41,26 +47,22 @@
         };
     }
 
-    // 2. Speech Synthesis (Reader)
+    // 2. Speech Synthesis
     function speakBotResponse(text) {
         const synth = window.speechSynthesis;
-        // Strip HTML tags for the reader
         const cleanText = text.replace(/<\/?[^>]+(>|$)/g, ""); 
         const utterance = new SpeechSynthesisUtterance(cleanText);
-
-        // Try to find a female-sounding voice
         const voices = synth.getVoices();
-        const femaleVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Samantha') || v.name.includes('Aria'));
+        const femaleVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Aria') || v.name.includes('Female'));
         if (femaleVoice) utterance.voice = femaleVoice;
-
         synth.speak(utterance);
     }
 
+    // 3. Main Logic
     async function sendMessage() {
         const question = msgInput.value.trim();
         if (!question) return;
 
-        // Display User Msg
         addMsg(question, 'user');
         msgInput.value = '';
 
@@ -69,20 +71,20 @@
             const response = await fetch(url);
             const data = await response.json();
             
-            // Assuming your webhook returns { "output": "..." }
-            const reply = data.output;
-            addMsg(reply, 'bot');
-            speakBotResponse(reply);
+            addMsg(data.output, 'bot');
+            speakBotResponse(data.output);
         } catch (e) {
-            alert("Error connecting to server.");
+            addMsg("Sorry, I'm having trouble connecting to the server.", 'bot');
         }
     }
 
     function addMsg(text, role) {
         const wrap = document.createElement('div');
         wrap.className = 'message ' + role;
+        // Use innerHTML so the <b> and <br> tags from n8n work
         wrap.innerHTML = `<div class="bubble">${text}</div>`;
         msgsEl.appendChild(wrap);
+        msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 </script>
 </body>
